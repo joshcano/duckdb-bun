@@ -1,6 +1,6 @@
 // P0-3 FFI load spike: prove dlopen + a full query round-trip works against
 // vendored libduckdb using only the pointer-based C API (no by-value calls).
-import { FFIType, dlopen, ptr } from "bun:ffi";
+import { dlopen, FFIType, ptr } from "bun:ffi";
 
 const libPath = new URL("../vendor/linux-x64/libduckdb.so", import.meta.url).pathname;
 

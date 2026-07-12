@@ -35,7 +35,7 @@
   "keywords": ["duckdb", "bun", "ffi", "sql", "analytics"],
   "license": "MIT",
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2",
     "@duckdb/node-api": "1.5.2-r.1",
     "@types/bun": "latest"
   }

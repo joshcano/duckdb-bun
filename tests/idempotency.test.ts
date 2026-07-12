@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { test } from "bun:test";
 import { DuckDBInstance } from "../src/index.ts";
 
 test("closeSync is idempotent on connection and instance", async () => {

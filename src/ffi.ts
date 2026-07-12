@@ -1,7 +1,7 @@
 // The FFI surface: dlopen the pointer-based libduckdb C API + cc-compile the
 // shim that wraps the by-value functions (`duckdb_query`, `duckdb_fetch_chunk`).
 // Everything is merged into a single `lib` object of callable symbols.
-import { FFIType, cc, dlopen } from "bun:ffi";
+import { cc, dlopen, FFIType } from "bun:ffi";
 import { loadNative } from "./library.ts";
 
 const native = await loadNative();
