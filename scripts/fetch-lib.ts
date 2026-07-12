@@ -42,16 +42,18 @@ async function main() {
   const tmpZip = new URL(`../vendor/${target.asset}.zip`, import.meta.url).pathname;
 
   console.log(`Fetching ${url}`);
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`download failed: ${res.status} ${res.statusText}`);
-  await Bun.write(tmpZip, res);
+  // Use curl (present on CI runners and dev machines) — it follows the GitHub
+  // release redirect reliably; Bun's fetch has stalled on it in some environments.
+  await Bun.$`curl -fsSL ${url} -o ${tmpZip}`;
 
   await mkdir(vendorDir, { recursive: true });
   await Bun.$`unzip -o -q ${tmpZip} -d ${vendorDir}`;
 
   // Move the shared lib to its canonical name; keep duckdb.h at vendor/ root.
+  // (Skip the mv when the names already match — `mv -f X X` errors out.)
   const extracted = `${vendorDir}${target.libInZip}`;
-  await Bun.$`mv -f ${extracted} ${vendorDir}${target.out}`;
+  const outPath = `${vendorDir}${target.out}`;
+  if (extracted !== outPath) await Bun.$`mv -f ${extracted} ${outPath}`;
   if (existsSync(`${vendorDir}duckdb.h`)) await Bun.$`mv -f ${vendorDir}duckdb.h ${headerPath}`;
   // Drop everything else we don't ship (static lib, hpp).
   await Bun.$`rm -f ${vendorDir}libduckdb_static.a ${vendorDir}duckdb.hpp`.nothrow();
@@ -60,7 +62,11 @@ async function main() {
   console.log(`Vendored ${target.out} (DuckDB v${DUCKDB_VERSION}) -> vendor/${target.dir}/`);
 }
 
-main().catch((err) => {
+// Top-level await so Bun keeps the process alive until the download completes
+// (a bare `main().catch()` lets the process exit before the async work runs).
+try {
+  await main();
+} catch (err) {
   console.error(err);
   process.exit(1);
-});
+}
