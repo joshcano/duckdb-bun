@@ -1,5 +1,5 @@
 {
-  "name": "duckdb-bun",
+  "name": "@joshcano/duckdb-bun",
   "version": "0.0.1",
   "description": "Bun-native DuckDB binding via bun:ffi over the libduckdb C API. Embeds libduckdb so `bun build --compile` yields a self-contained binary.",
   "author": "Josh Cano (https://github.com/joshcano)",
@@ -16,6 +16,9 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "files": ["src", "vendor", "native", "scripts/fetch-lib.ts"],
   "scripts": {

@@ -19,9 +19,18 @@ Pinned to **DuckDB v1.5.2** (matches `@duckdb/node-api@1.5.2-r.1`).
 uses it can't be shipped as a standalone binary. `duckdb-bun` `dlopen`s a plain `libduckdb.so`
 that Bun *can* embed via `import p from "./libduckdb.so" with { type: "file" }`.
 
-## Setup
+## Install
 
-The native library is not committed. Fetch it for your platform:
+```sh
+bun add @joshcano/duckdb-bun
+```
+
+The published package ships the `linux-x64` `libduckdb.so`. On other platforms (or when developing
+from source), fetch the native library first — see Setup.
+
+## Setup (development / other platforms)
+
+The native library is not committed to git. Fetch it for your platform:
 
 ```sh
 bun run fetch-lib          # downloads libduckdb v1.5.2 for the host platform into vendor/
@@ -34,7 +43,7 @@ bun run fetch-lib          # downloads libduckdb v1.5.2 for the host platform in
 ## Usage
 
 ```ts
-import { DuckDBInstance } from "duckdb-bun";
+import { DuckDBInstance } from "@joshcano/duckdb-bun";
 
 const db = await DuckDBInstance.create(":memory:");
 const conn = await db.connect();
@@ -76,7 +85,7 @@ faithful port. The migration is two changes:
 1. Swap the import:
    ```diff
    - import { DuckDBInstance, DuckDBConnection } from "@duckdb/node-api";
-   + import { DuckDBInstance, DuckDBConnection } from "duckdb-bun";
+   + import { DuckDBInstance, DuckDBConnection } from "@joshcano/duckdb-bun";
    ```
 2. Simplify `sanitizeValue()` — this binding returns **native JS values**, so the
    `switch (ctor)` over `DuckDBDateValue` / `DuckDBTimestampValue` / `DuckDBDecimalValue`
