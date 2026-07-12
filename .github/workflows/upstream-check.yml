@@ -1,0 +1,41 @@
+name: Upstream DuckDB check
+
+# Weekly: is a newer DuckDB released than our pin? If so, open a tracking issue.
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Mondays 09:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - run: bun install --frozen-lockfile
+
+      - name: Run version check
+        run: bun run check-version | tee check.txt || true
+
+      - name: Open an issue if a newer DuckDB exists
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if grep -q "is newer than the pin" check.txt; then
+            latest=$(grep "latest DuckDB release" check.txt | awk '{print $NF}')
+            title="Upstream DuckDB $latest available"
+            if ! gh issue list --state open --search "$title in:title" | grep -q "$latest"; then
+              gh issue create --title "$title" \
+                --body "$(cat check.txt)"$'\n\nSee MAINTENANCE.md for the upgrade steps.'
+            else
+              echo "Issue for $latest already open."
+            fi
+          else
+            echo "Pin is current."
+          fi

@@ -1,0 +1,39 @@
+{
+  "name": "duckdb-bun",
+  "version": "0.0.1",
+  "description": "Bun-native DuckDB binding via bun:ffi over the libduckdb C API. Embeds libduckdb so `bun build --compile` yields a self-contained binary.",
+  "author": "Josh Cano (https://github.com/joshcano)",
+  "homepage": "https://github.com/joshcano/duckdb-bun#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshcano/duckdb-bun.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joshcano/duckdb-bun/issues"
+  },
+  "type": "module",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src", "vendor", "native", "scripts/fetch-lib.ts"],
+  "scripts": {
+    "fetch-lib": "bun run scripts/fetch-lib.ts",
+    "spike": "bun run scripts/spike.ts",
+    "test": "bun test",
+    "parity": "bun test tests/parity.test.ts",
+    "check-version": "bun run scripts/check-version.ts",
+    "lint": "biome check src tests scripts examples",
+    "format": "biome format --write src tests scripts examples",
+    "check": "biome check --write src tests scripts examples",
+    "ci": "biome check src tests scripts examples && bun test"
+  },
+  "keywords": ["duckdb", "bun", "ffi", "sql", "analytics"],
+  "license": "MIT",
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@duckdb/node-api": "1.5.2-r.1",
+    "@types/bun": "latest"
+  }
+}

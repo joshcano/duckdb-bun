@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: deps
+    # DuckDB itself is pinned in src/version.ts and tracked by the upstream-check
+    # workflow, not dependabot — but keep @duckdb/node-api aligned to the pin.
+    ignore:
+      - dependency-name: "@duckdb/node-api"

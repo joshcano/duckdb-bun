@@ -1,0 +1,15 @@
+# Native libduckdb binaries are fetched via `bun run fetch-lib`, not committed.
+vendor/**/*.so
+vendor/**/*.dylib
+vendor/**/*.dll
+vendor/**/*.a
+vendor/*.zip
+
+node_modules/
+*.log
+.DS_Store
+
+# compiled binaries / test artifacts
+/dd
+*.bin
+tests/compile/*.out

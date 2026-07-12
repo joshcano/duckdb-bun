@@ -1,0 +1,3 @@
+[test]
+# Run every *.test.ts under tests/
+root = "tests"

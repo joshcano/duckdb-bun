@@ -1,0 +1,32 @@
+name: Release
+
+# Publishes to npm when you cut a GitHub Release.
+# Requires: an NPM_TOKEN repo secret, and a publishable package name in package.json
+# (npm "duckdb-bun" is taken — use a scoped name like @joshcano/duckdb-bun).
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+      - run: bun install --frozen-lockfile
+      - run: bun run fetch-lib
+      - run: bunx biome ci src tests scripts examples
+      - run: bun test
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          npm publish --provenance --access public
