@@ -4,6 +4,16 @@ This binding tracks DuckDB's stable **C API**, which is versioned and rarely bre
 Day-to-day maintenance is mostly: watch for new DuckDB releases, bump the pin, and let the
 parity + test suite confirm nothing drifted.
 
+## Versioning
+
+The package version **mirrors the DuckDB version it wraps**, using the same scheme as
+`@duckdb/node-api`: **`<duckdb-version>-r.<n>`**. So `1.5.2-r.0` wraps DuckDB `1.5.2`; a fix that
+doesn't change DuckDB bumps to `1.5.2-r.1`, and the next DuckDB (say 1.5.4) resets to `1.5.4-r.0`.
+
+`tests/package-version.test.ts` enforces that `package.json` version's base equals
+`DUCKDB_VERSION` in `src/version.ts`, and `bun run check-version` flags a mismatch — so the two
+can't silently drift.
+
 ## The one command to know if you're behind
 
 ```sh
@@ -32,7 +42,8 @@ is a devDependency pinned to the same DuckDB version as our `src/version.ts` —
 
 ## Upgrading DuckDB (e.g. 1.5.2 → 1.5.4)
 
-1. **Bump the pin** in `src/version.ts` (`DUCKDB_VERSION`).
+1. **Bump the pin** in `src/version.ts` (`DUCKDB_VERSION`) **and** set `package.json` version to
+   `<new-duckdb>-r.0` (the version test enforces they match).
 2. **Bump the reference**: `bun add -d @duckdb/node-api@<new>-r.<n>` so parity compares against the
    matching DuckDB. (`bun run check-version` will flag a mismatch.)
 3. **Re-fetch the native lib**: `bun run fetch-lib` (downloads the new `libduckdb.so` + `duckdb.h`).

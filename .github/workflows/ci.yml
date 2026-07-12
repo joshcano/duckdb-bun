@@ -19,7 +19,15 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Cache libduckdb
+        id: cache-lib
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: libduckdb-${{ runner.os }}-${{ hashFiles('src/version.ts') }}
+
       - name: Fetch libduckdb (not committed)
+        if: steps.cache-lib.outputs.cache-hit != 'true'
         run: bun run fetch-lib
 
       - name: Lint (Biome)

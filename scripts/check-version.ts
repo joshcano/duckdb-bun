@@ -35,6 +35,8 @@ const latest = await latestDuckDBRelease();
 // Hard failures (exit 1) mean the repo is in a broken/misleading state. A newer
 // upstream release is informational only — it must not turn CI red on its own.
 let hardDrift = false;
+const pkgBase = (pkg.version ?? "").replace(/-r\.\d+$/, "");
+console.log(`package version (package.json):     ${pkg.version}`);
 console.log(`duckdb-bun pin (src/version.ts):   ${DUCKDB_VERSION_TAG}`);
 console.log(`@duckdb/node-api devDep:            ${nodeApiPin || "unknown"}`);
 console.log(`vendored libduckdb present:         ${vendored ? "yes (linux-x64)" : "NO — run `bun run fetch-lib`"}`);
@@ -42,6 +44,12 @@ console.log(`latest DuckDB release:              ${latest ? `v${latest}` : "unav
 
 if (!vendored) {
   console.log("\n❌ vendored libduckdb missing — run `bun run fetch-lib` before testing.");
+  hardDrift = true;
+}
+if (pkgBase !== DUCKDB_VERSION) {
+  console.log(
+    `\n❌ package version (${pkg.version}) base does not match the DuckDB pin (${DUCKDB_VERSION}). Use <duckdb>-r.<n>.`,
+  );
   hardDrift = true;
 }
 if (nodeApiPin && nodeApiPin !== DUCKDB_VERSION) {

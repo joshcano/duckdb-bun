@@ -1,6 +1,6 @@
 {
   "name": "@joshcano/duckdb-bun",
-  "version": "0.0.1",
+  "version": "1.5.2-r.0",
   "description": "Bun-native DuckDB binding via bun:ffi over the libduckdb C API. Embeds libduckdb so `bun build --compile` yields a self-contained binary.",
   "author": "Josh Cano (https://github.com/joshcano)",
   "homepage": "https://github.com/joshcano/duckdb-bun#readme",
