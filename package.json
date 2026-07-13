@@ -21,7 +21,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "files": ["src", "vendor", "native", "scripts/fetch-lib.ts"],
+  "files": [
+    "src",
+    "native",
+    "scripts/fetch-lib.ts",
+    "vendor/duckdb.h",
+    "vendor/linux-x64",
+    "vendor/node-api/src",
+    "vendor/node-api/LICENSE",
+    "vendor/node-api/PROVENANCE.md"
+  ],
   "scripts": {
     "fetch-lib": "bun run scripts/fetch-lib.ts",
     "spike": "bun run scripts/spike.ts",
