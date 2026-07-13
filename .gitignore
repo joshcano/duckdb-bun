@@ -13,3 +13,7 @@ node_modules/
 /dd
 *.bin
 tests/compile/*.out
+
+# compiled proof binaries
+dd
+dd-neo

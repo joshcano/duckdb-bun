@@ -5,12 +5,24 @@
 ![DuckDB v1.5.2](https://img.shields.io/badge/DuckDB-v1.5.2-yellow)
 ![Bun](https://img.shields.io/badge/Bun-%E2%89%A51.3-black)
 
-A **Bun-native DuckDB binding** built on [`bun:ffi`](https://bun.sh/docs/api/ffi) over the
-libduckdb **C API** — no N-API `.node` addon. It embeds `libduckdb` as a Bun asset so that
-**`bun build --compile` produces a single self-contained executable** (the thing the official
-`@duckdb/node-api` addon cannot do).
+A **Bun-native, drop-in reimplementation of [`@duckdb/node-api`](https://www.npmjs.com/package/@duckdb/node-api)**
+built on [`bun:ffi`](https://bun.sh/docs/api/ffi) over the libduckdb **C API** — no N-API `.node`
+addon. It ships the entire official `@duckdb/node-api` TypeScript layer running over our FFI
+bindings, so it's the **same API returning the same value objects**, and it embeds `libduckdb` as a
+Bun asset so that **`bun build --compile` produces a single self-contained executable** (the thing
+the official addon cannot do).
 
-Pinned to **DuckDB v1.5.2** (matches `@duckdb/node-api@1.5.2-r.1`).
+Drop-in: change one import.
+
+```ts
+import { DuckDBInstance } from "@joshcano/duckdb-bun"; // was "@duckdb/node-api"
+```
+
+Verified against the official package's own test suite: **92/92 passing**. Pinned to **DuckDB
+v1.5.2** (matches `@duckdb/node-api@1.5.2-r.1`).
+
+> A narrow, ergonomic native-JS binding (dates as `YYYY-MM-DD` strings, decimals as numbers, etc.)
+> is also available at `@joshcano/duckdb-bun/native-js` — see [Native-JS binding](#native-js-binding).
 
 ## Why
 
@@ -58,16 +70,17 @@ db.closeSync();
 ## Compile to a standalone binary
 
 ```sh
-bun build examples/compile-entry.ts --compile --outfile ./dd
-./dd            # runs a real DuckDB query with libduckdb embedded — no bun/node/libduckdb needed
+bun run build:neo   # compiles the drop-in API entry -> ./dd-neo (self-contained)
+./dd-neo            # runs a real DuckDB query with libduckdb embedded — no bun/node/libduckdb needed
 ```
 
 ## Develop
 
 ```sh
 bun run spike          # FFI smoke test against vendored libduckdb
-bun test               # full suite
-bun run parity         # differential test vs the official @duckdb/node-api
+bun test               # full suite (unit + parity + official @duckdb/node-api suite)
+bun run test:official  # just the vendored @duckdb/node-api parity suite (92/92)
+bun run gen:bindings   # regenerate the @duckdb/node-bindings contract barrel
 bun run check-version  # is our DuckDB pin behind / consistent?
 bun run check          # biome lint + format
 ```
@@ -78,28 +91,33 @@ proves we still match `@duckdb/node-api`, and `bun run check-version` tells you 
 
 ## Migrating from `@duckdb/node-api`
 
-`duckdb-bun` is a drop-in for the slice of `@duckdb/node-api` that oscar-backend's
-`src/mcp/workspace.ts` uses. See [`examples/workspace.ts`](examples/workspace.ts) for a full
-faithful port. The migration is two changes:
+It's a true drop-in — **change the import, nothing else**:
 
-1. Swap the import:
-   ```diff
-   - import { DuckDBInstance, DuckDBConnection } from "@duckdb/node-api";
-   + import { DuckDBInstance, DuckDBConnection } from "@joshcano/duckdb-bun";
-   ```
-2. Simplify `sanitizeValue()` — this binding returns **native JS values**, so the
-   `switch (ctor)` over `DuckDBDateValue` / `DuckDBTimestampValue` / `DuckDBDecimalValue`
-   goes away. Mapping: `TIMESTAMP*`→`Date`, `DECIMAL`→`number`, `BIGINT`/`HUGEINT`→`bigint`,
-   `DATE`→`YYYY-MM-DD` string (preserves the old date-only output), `null` via the validity mask.
+```diff
+- import { DuckDBInstance, DuckDBConnection } from "@duckdb/node-api";
++ import { DuckDBInstance, DuckDBConnection } from "@joshcano/duckdb-bun";
+```
 
-Everything else (`create` / `connect` / `run` / `runAndReadAll` / `getRowObjects` /
-`columnNames` / `closeSync`, and all the SQL) is unchanged.
+Same classes, same methods, same wrapper value objects (`DuckDBDateValue`, `DuckDBTimestampValue`,
+`DuckDBDecimalValue`, …), same behavior — verified against `@duckdb/node-api`'s own test suite
+(92/92). Two things to know:
 
-> **Runtime note:** this package uses `bun:ffi`, so it only runs under **Bun**. The current
-> Node.js `oscar-backend` must stay on `@duckdb/node-api`; the target is Bun services that need
-> `bun build --compile` (which the N-API addon blocks).
+- **Runtime:** uses `bun:ffi`, so it runs under **Bun**, not Node.js. (The payoff: `bun build
+  --compile` works, which the N-API addon blocks.)
+- **Scalar UDFs run single-threaded:** registering a scalar function pins that connection to
+  `threads=1` (our UDF callback is a synchronous FFI callback that must run on the caller's thread).
+  The one intentional behavioral difference; everything else matches.
 
-## Value type mapping
+## Native-JS binding
+
+The original ergonomic binding — dates as `YYYY-MM-DD` strings, decimals/bigints as numbers, no
+wrapper objects — is still available at the `/native-js` subpath:
+
+```ts
+import { DuckDBInstance } from "@joshcano/duckdb-bun/native-js";
+```
+
+Its value mapping:
 
 | DuckDB type | JS value |
 |---|---|

@@ -10,7 +10,17 @@
     "noEmit": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["bun-types"]
+    "types": ["bun-types"],
+    "baseUrl": ".",
+    "paths": {
+      // Redirect the vendored official test suite's `vitest` import to our
+      // bun:test shim. tsconfig paths participate in Bun's resolution earlier
+      // than plugin onResolve, so this overrides Bun's built-in vitest remap.
+      // (`@duckdb/node-bindings` is aliased separately, scoped to vendored code,
+      // in tests/preload.ts — a global path alias would break the real
+      // @duckdb/node-api devDep used by tests/parity.test.ts.)
+      "vitest": ["./tests/vitest-shim.ts"]
+    }
   },
-  "include": ["src", "tests", "scripts", "examples"]
+  "include": ["src", "tests", "scripts", "examples", "vendor/node-api"]
 }

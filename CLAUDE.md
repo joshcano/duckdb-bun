@@ -41,3 +41,40 @@ which `@duckdb/node-api` (an N-API `.node` addon) cannot do.
 `bun run spike` (FFI smoke), `bun test`, and the compile proof:
 `bun build examples/compile-entry.ts --compile --outfile ./dd && ./dd` from a dir with no
 vendored lib reachable — proves the `.so` is embedded.
+
+## The package IS a drop-in for `@duckdb/node-api` (`src/neo.ts` = main export)
+
+As of **1.5.2-r.1**, the package's main export is a **faithful 1:1 reimplementation of
+`@duckdb/node-api`** — the whole official TypeScript layer, running over `bun:ffi`, returning the
+same wrapper value objects — so it can replace the official package *and* embed into a
+`bun build --compile` binary. Swap the import, keep your code:
+
+```ts
+import { DuckDBInstance } from "@joshcano/duckdb-bun"; // was "@duckdb/node-api"
+```
+
+The old narrow, native-JS bespoke binding is still at `@joshcano/duckdb-bun/native-js` (`src/index.ts`).
+
+- **Architecture:** `@duckdb/node-api` is pure TS over ONE interface — `@duckdb/node-bindings` (273
+  functions). We reimplement only that interface in `src/bindings/`; the official TS layer is vendored
+  MIT source in `vendor/node-api/src` (from duckdb-node-neo `635277e` / v1.5.2-r.1), used as-is except
+  its `@duckdb/node-bindings` import, which `scripts/vendor-rewrite-bindings.ts` rewrites on disk to
+  our `src/bindings/`. That on-disk rewrite is why the published package is a plugin-free drop-in.
+  See `vendor/node-api/PROVENANCE.md`.
+- **`src/bindings/`:** `ffi.ts` (dlopen table), `impl/*` (per-subsystem implementations), `handles.ts`
+  (opaque-pointer/out-param/liveness helpers), `marshal.ts` (i128 split/join), `enums.ts`/`types.ts`/
+  `functions.ts` (the contract barrel — regenerate with `bun run gen:bindings`). Struct-by-value C
+  functions and JSCallback scalar-UDF bridging live in the grown `native/shim.c`.
+- **Parity bar:** the vendored official Vitest suite (`bun run test:official`) — **92/92 passing**
+  (1 skip), deterministic. Runs under `bun:test`; `tests/preload.ts` only rewrites the vendored test
+  files' `vitest` import to `tests/vitest-shim.ts`.
+- **Compile proof:** `bun run build:neo` → `./dd-neo` runs self-contained with no vendored lib
+  reachable. Plain `bun build --compile` (no plugin), since the vendored layer already resolves our
+  bindings on disk.
+- **Scalar UDFs run single-threaded:** `register_scalar_function` pins the connection to `threads=1`.
+  Our UDF callback is a synchronous `bun:ffi` JSCallback that must run on the caller's stack; DuckDB
+  otherwise dispatches operators to smaller-stacked worker threads and overflows the callback. This is
+  the one intentional behavioral difference from the N-API binding (which marshals to a worker).
+- **Downstream:** because this returns wrapper value objects (true 1:1), a consumer like
+  `oscar-backend/src/mcp/workspace.ts` keeps its `sanitizeValue()` switch (opposite of the bespoke
+  API's "delete sanitizeValue" note).
