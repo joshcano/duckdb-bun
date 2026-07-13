@@ -1,3 +1,6 @@
 [test]
 # Run every *.test.ts under tests/
 root = "tests"
+# Scoped resolver plugin: aliases @duckdb/node-bindings -> our bindings and
+# vitest -> the bun:test shim, but only for the vendored official code.
+preload = ["./tests/preload.ts"]

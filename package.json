@@ -1,7 +1,7 @@
 {
   "name": "@joshcano/duckdb-bun",
-  "version": "1.5.2-r.0",
-  "description": "Bun-native DuckDB binding via bun:ffi over the libduckdb C API. Embeds libduckdb so `bun build --compile` yields a self-contained binary.",
+  "version": "1.5.2-r.1",
+  "description": "Bun-native, drop-in reimplementation of @duckdb/node-api via bun:ffi over the libduckdb C API. Embeds libduckdb so `bun build --compile` yields a self-contained binary.",
   "author": "Josh Cano (https://github.com/joshcano)",
   "homepage": "https://github.com/joshcano/duckdb-bun#readme",
   "repository": {
@@ -12,10 +12,11 @@
     "url": "https://github.com/joshcano/duckdb-bun/issues"
   },
   "type": "module",
-  "module": "src/index.ts",
-  "types": "src/index.ts",
+  "module": "src/neo.ts",
+  "types": "src/neo.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/neo.ts",
+    "./native-js": "./src/index.ts"
   },
   "publishConfig": {
     "access": "public"
@@ -25,6 +26,9 @@
     "fetch-lib": "bun run scripts/fetch-lib.ts",
     "spike": "bun run scripts/spike.ts",
     "test": "bun test",
+    "test:official": "bun test tests/official/api.test.ts",
+    "gen:bindings": "bun run scripts/gen-bindings-scaffold.ts",
+    "build:neo": "bun run scripts/build-neo-compile.ts",
     "parity": "bun test tests/parity.test.ts",
     "check-version": "bun run scripts/check-version.ts",
     "lint": "biome check src tests scripts examples",
