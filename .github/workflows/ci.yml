@@ -21,7 +21,7 @@ jobs:
 
       - name: Cache libduckdb
         id: cache-lib
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: libduckdb-${{ runner.os }}-${{ hashFiles('src/version.ts') }}
